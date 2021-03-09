@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
-import '../styles/Home.module.css'
+import styled from 'styled-components'
 
+import Header from '../components/header'
 const NoSSRVideoCall = dynamic(() => import("../components/video-call"), {
   ssr: false,
 });
@@ -8,10 +9,15 @@ const NoSSRVideoCall = dynamic(() => import("../components/video-call"), {
 
 const App = () => {
   return (
-    <>
+    <Container>
+      <Header />
       <NoSSRVideoCall />
-    </>
+    </Container>
   );
 }
 
 export default App
+
+const Container = styled.main`
+  margin: 0 auto;
+`;

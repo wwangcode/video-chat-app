@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import axios from 'axios'
 import ReactDOM from "react-dom";
 import AgoraRTC from "agora-rtc-sdk-ng";
+import styled from 'styled-components'
 
 
 
@@ -23,6 +24,8 @@ export const rtc = {
 
 function VideoCall() {
     const [joined, setJoined] = useState(false);
+    const [volume, setVolume] = useState(100);
+
     const channelRef = useRef("");
     const remoteRef = useRef("");
     const leaveRef = useRef("");
@@ -30,7 +33,7 @@ function VideoCall() {
   async function handleSubmit(e) {
     try {
       if (channelRef.current.value === "") {
-        return console.log("Please Enter Channel Name");
+        return console.log("Please Enter Room Name");
       }
 
       setJoined(true);
@@ -71,6 +74,7 @@ function VideoCall() {
         if (mediaType === "audio") {
           // Get `RemoteAudioTrack` in the `user` object.
           const remoteAudioTrack = user.audioTrack;
+          remoteAudioTrack.setVolume(volume)
           // Play the audio track. Do not need to pass any DOM element
           remoteAudioTrack.play();
         }
@@ -138,30 +142,44 @@ function VideoCall() {
     }
   }
 
+  // const [ volume, setVolume ] = useState(100)
+  // // Sets the volume of the recorded signal.
+  // rtcEngine.adjustRecordingSignalVolume(volume);
+
 
   return (
     <>
-      <div className="container">
-        <input
+    <Container>
+      <InputContainer joined={joined}>
+        <Input
           type="text"
           ref={channelRef}
           id="channel"
-          placeholder="Enter Channel name"
-        />
-        <input
-          type="submit"
-          value="Join"
-          onClick={handleSubmit}
+          placeholder="Enter Room Name"
           disabled={joined ? true : false}
+          style={{backgroundColor: 'white', color: 'black'}}
         />
-        <input
-          type="button"
-          ref={leaveRef}
-          value="Leave"
-          onClick={handleLeave}
-          disabled={joined ? false : true}
-        />
-      </div>
+          {joined ?
+            <>
+              <Input
+                type="button"
+                ref={leaveRef}
+                value="Leave"
+                onClick={handleLeave}
+                disabled={joined ? false : true}
+              />
+            </>
+          : 
+            <>
+              <Input
+                type="submit"
+                value="Join"
+                onClick={handleSubmit}
+                disabled={joined ? true : false}
+              />
+            </>
+          }
+      </InputContainer>
       {joined ? (
         <>
           <div id="local-stream" className="stream local-stream"></div>
@@ -172,8 +190,48 @@ function VideoCall() {
           ></div>
         </>
       ) : null}
+      {/* <VolumeSlider type="range" min="0" max="150" value={volume} /> */}
+    </Container>
     </>
   );
 }
 
 export default VideoCall;
+
+
+// const VolumeSlider = styled.input`
+
+// `;
+
+const Input = styled.input`
+  cursor: pointer;
+  padding: .5rem;
+  outline: none;
+  margin: 0 .25rem;
+  background-color: rgba(113,125,231,1);
+  border-radius: 1rem;
+  border: 0;
+  font-weight: bold;
+  font-size: 1.25rem;
+  color: white;
+
+`;
+
+const InputContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding-bottom: 1rem;
+  background-color: rgba(231, 113, 125, 1);
+  margin: 0 auto;
+  ${Input} {
+    &:hover {
+      background-color: rgba(133,145,250,1);
+    }
+  }
+`;
+
+const Container = styled.div`
+  margin: 0 auto;
+
+`;
