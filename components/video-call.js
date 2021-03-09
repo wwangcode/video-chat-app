@@ -181,16 +181,15 @@ function VideoCall() {
           }
       </InputContainer>
       {joined ? (
-        <>
-          <div id="local-stream" className="stream local-stream"></div>
+        <VideoStreamContainer>          
+          <div id="local-stream" className="stream local-stream" />
           <div
             id="remote-stream"
             ref={remoteRef}
             className="stream remote-stream"
-          ></div>
-        </>
+          />
+        </VideoStreamContainer>
       ) : null}
-      {/* <VolumeSlider type="range" min="0" max="150" value={volume} /> */}
     </Container>
     </>
   );
@@ -199,9 +198,11 @@ function VideoCall() {
 export default VideoCall;
 
 
-// const VolumeSlider = styled.input`
-
-// `;
+const VideoStreamContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+`;
 
 const Input = styled.input`
   cursor: pointer;

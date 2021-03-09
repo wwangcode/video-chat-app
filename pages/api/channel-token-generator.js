@@ -11,7 +11,7 @@ export default async (req, resp) => {
     resp.setHeader('Pragma', 'no-cache');
     resp.setHeader('Access-Control-Allow-Origin', '*');
 
-    console.log(req)
+    // console.log(req)
     const channelName = req.body.channelName;
 
     if (!channelName) {
