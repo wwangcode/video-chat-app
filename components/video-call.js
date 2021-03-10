@@ -4,6 +4,9 @@ import ReactDOM from "react-dom";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import styled from 'styled-components'
 
+import Header from './header'
+import Footer from './footer'
+import LandingPage from './landing-page'
 
 
 export const rtc = {
@@ -12,23 +15,16 @@ export const rtc = {
     // For the local audio and video tracks
     localAudioTrack: null,
     localVideoTrack: null,
-  };
-  
-// export const options = {
-//     // Pass your app ID here
-//     appId: `${process.env.AGORA_APP_ID}`,
-//     certificate: `${process.env.AGORA_APP_CERTIFICATE}`,
-//     // Pass a token if your project enables the App Certificate
-//     // token: `${process.env.AGORA_TEST_TOKEN}`,
-// };
+};
 
 function VideoCall() {
-    const [joined, setJoined] = useState(false);
-    const [volume, setVolume] = useState(100);
+  const [joined, setJoined] = useState(false)
+  const [muteMic, setMuteMic] = useState(false)
+  const [camOff, setCamOff] = useState(false)
 
-    const channelRef = useRef("");
-    const remoteRef = useRef("");
-    const leaveRef = useRef("");
+  const channelRef = useRef("");
+  const remoteRef = useRef("");
+  const leaveRef = useRef("");
 
   async function handleSubmit(e) {
     try {
@@ -36,6 +32,7 @@ function VideoCall() {
         return console.log("Please Enter Room Name");
       }
 
+      // handleJoined(true)
       setJoined(true);
 
       rtc.client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
@@ -74,7 +71,7 @@ function VideoCall() {
         if (mediaType === "audio") {
           // Get `RemoteAudioTrack` in the `user` object.
           const remoteAudioTrack = user.audioTrack;
-          remoteAudioTrack.setVolume(volume)
+          // remoteAudioTrack.setVolume(volume)
           // Play the audio track. Do not need to pass any DOM element
           remoteAudioTrack.play();
         }
@@ -95,7 +92,7 @@ function VideoCall() {
       });
 
     // gets generated channel key token from server 
-      const res = await axios.post('/api/channel-token-generator', {channelName: channelRef.current.value})
+      const res = await axios.post('/api/channel-token-generator', {channelName: channelRef.current.value.trim()})
 
       console.log(res)
       const { token: channelKey } = res.data
@@ -104,7 +101,7 @@ function VideoCall() {
         //   channelKey replaces app ID for increased security 
           channelKey,
         // channel name
-        channelRef.current.value,
+        channelRef.current.value.trim(),
         // uid - null or 0, client will create uid on success
         null,
       );
@@ -126,6 +123,7 @@ function VideoCall() {
       rtc.localVideoTrack.close();
 
       setJoined(false);
+      // handleJoined(false)
       localContainer.textContent = "";
 
       // Traverse all remote users
@@ -142,55 +140,63 @@ function VideoCall() {
     }
   }
 
-  // const [ volume, setVolume ] = useState(100)
-  // // Sets the volume of the recorded signal.
-  // rtcEngine.adjustRecordingSignalVolume(volume);
+  const handleMute = async () => {
+    console.log('mute mic fired')
+    if (rtc.localAudioTrack) {
+      setMuteMic(true)
+      await rtc.localAudioTrack.setEnabled(false)
+    }
+  }
+
+  const handleUnmute = async () => {
+    console.log('unmute mic fired')
+    if (rtc.localAudioTrack) {
+      setMuteMic(false)
+      await rtc.localAudioTrack.setEnabled(true)
+    }
+  }
+
+  const handleTurnOffCam = async () => {
+    console.log('handleTurnOffCam fired')
+    if (rtc.localVideoTrack) {
+      setCamOff(true)
+      await rtc.localVideoTrack.setEnabled(false)
+    }
+  }
+
+  const handleTurnOnCam = async () => {
+    console.log('handleTurnOnCam fired')
+    if (rtc.localVideoTrack) {
+      setCamOff(false)
+      await rtc.localVideoTrack.setEnabled(true)
+    }
+  }
 
 
   return (
     <>
-    <Container>
-      <InputContainer joined={joined}>
-        <Input
-          type="text"
-          ref={channelRef}
-          id="channel"
-          placeholder="Enter Room Name"
-          disabled={joined ? true : false}
-          style={{backgroundColor: 'white', color: 'black'}}
-        />
-          {joined ?
-            <>
-              <Input
-                type="button"
-                ref={leaveRef}
-                value="Leave"
-                onClick={handleLeave}
-                disabled={joined ? false : true}
-              />
-            </>
-          : 
-            <>
-              <Input
-                type="submit"
-                value="Join"
-                onClick={handleSubmit}
-                disabled={joined ? true : false}
-              />
-            </>
-          }
-      </InputContainer>
-      {joined ? (
-        <VideoStreamContainer>          
-          <div id="local-stream" className="stream local-stream" />
-          <div
-            id="remote-stream"
-            ref={remoteRef}
-            className="stream remote-stream"
-          />
-        </VideoStreamContainer>
-      ) : null}
-    </Container>
+        <Container>
+            <Header channelRef={channelRef} leaveRef={leaveRef} joined={joined} handleSubmit={handleSubmit} handleLeave={handleLeave} />
+            {joined ? (
+            <div className='stream-container'>          
+                <div id="local-stream" className="stream local-stream" />
+                <div
+                id="remote-stream"
+                ref={remoteRef}
+                className="stream remote-stream"
+                />
+            </div>
+            ) : <LandingPage />}
+            <Footer 
+              handleMute={handleMute} 
+              handleUnmute={handleUnmute} 
+              muteMic={muteMic} 
+              handleTurnOffCam={handleTurnOffCam} 
+              handleTurnOnCam={handleTurnOnCam} 
+              camOff={camOff} 
+              joined={joined}
+            />
+        </Container>
     </>
   );
 }
@@ -198,10 +204,20 @@ function VideoCall() {
 export default VideoCall;
 
 
-const VideoStreamContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
+const FooterContainer = styled.footer`
+    margin: 0 auto;
+    text-align: center;
+    width: 100vw;
+    height: 5rem;
+    background-color: rgba(231, 113, 125, 1);
+    position: absolute;
+    bottom: 0;
+    color: white;
+    padding-top: 1rem;
+`;
+
+const MuteMic = styled.div`
+    cursor: pointer;
 `;
 
 const Input = styled.input`
@@ -234,5 +250,5 @@ const InputContainer = styled.div`
 
 const Container = styled.div`
   margin: 0 auto;
-
+  min-height: 100vh;
 `;
